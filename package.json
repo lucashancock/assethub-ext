@@ -1,6 +1,6 @@
 {
-  "name": "deepak",
-  "displayName": "deepak",
+  "name": "assethub",
+  "displayName": "Assethub",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -15,29 +15,42 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "deepak",
-          "title": "Deepak",
+          "id": "assethub",
+          "title": "Assethub",
           "icon": "$(circle-large-filled)"
         }
       ]
     },
     "views": {
-      "deepak": [
+      "assethub": [
         {
           "id": "treeViewExample",
           "type": "tree",
-          "name": "Simple Tree View",
-          "icon": "$(heart)",
-          "contextualTitle": "Simple Tree View"
+          "name": "Use Cases",
+          "icon": "${circle-large-filled}",
+          "contextualTitle": "Use Cases for Assethub"
         }
       ]
     },
-    "menus": {},
+    "menus": {
+      "view/title": [
+        {
+          "command": "treeViewExample.refresh",
+          "when": "view == treeViewExample",
+          "group": "navigation"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "streeViewExample.openLeaf",
+        "command": "treeViewExample.openLeaf",
         "title": "Open Tree Entry",
         "icon": "$(file-code)"
+      },
+      {
+        "command": "treeViewExample.refresh",
+        "title": "Refresh the Use Cases",
+        "icon": "$(extensions-refresh)"
       }
     ]
   },

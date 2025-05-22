@@ -10,10 +10,11 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand(
     "treeViewExample.openLeaf",
     (node: TreeItemNode) => {
-      openLeafWebview(
-        node.id ?? "",
-        node.inputSchema ?? "No input schema defined."
-      );
+      openLeafWebview(node);
     }
   );
+
+  vscode.commands.registerCommand("treeViewExample.refresh", () => {
+    treeDataProvider.refresh();
+  });
 }

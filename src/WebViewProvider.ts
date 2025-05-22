@@ -1,9 +1,15 @@
 import * as vscode from "vscode";
+import { TreeItemNode } from "./TreeDataProvider";
+import {
+  PreRequisites,
+  parsePreRequisites,
+  getCommandToRun,
+} from "./services/assetService";
 
-const panelMap: Map<string, vscode.WebviewPanel> = new Map();
+const panelMap: Map<number, vscode.WebviewPanel> = new Map();
 
-export function openLeafWebview(id: string, content: string) {
-  const existingPanel = panelMap.get(id);
+export function openLeafWebview(node: TreeItemNode) {
+  const existingPanel = panelMap.get(node.assetId);
   if (existingPanel) {
     existingPanel.reveal(vscode.ViewColumn.One);
     return;
@@ -11,7 +17,7 @@ export function openLeafWebview(id: string, content: string) {
 
   const panel = vscode.window.createWebviewPanel(
     "leafView",
-    id,
+    node.title,
     vscode.ViewColumn.One,
     {
       enableScripts: true,
@@ -19,36 +25,41 @@ export function openLeafWebview(id: string, content: string) {
     }
   );
 
-  panel.webview.html = getWebviewContent(id, content);
-  panelMap.set(id, panel);
+  panel.webview.html = getWebviewContent(node);
+  panelMap.set(node.assetId, panel);
 
   panel.onDidDispose(() => {
-    panelMap.delete(id); // Clean up when closed
+    panelMap.delete(node.assetId); // Clean up when closed
   });
 
   panel.webview.onDidReceiveMessage((message) => {
     if (message.command === "runCommand") {
-      const command = getCommandToRun(id);
+      console.log(message);
+      const command = getCommandToRun(
+        node.assetId,
+        message.assetId,
+        message.args
+      );
       runCommandInTerminal(command, panel);
     }
-    // if (message.anyprophere === "any") {
-    //  // Handle any other messages/commands here, can be API driven.
-    // }
   });
 }
 
-function getWebviewContent(id: string, content: string): string {
+function getWebviewContent(node: TreeItemNode): string {
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Task: ${id}</title>
+  <title>Task: ${node.title}</title>
   <style>
     :root {
       color-scheme: light dark; /* Enables automatic color adaptation in supported browsers */
     }
-
+    input {
+      width: 50%;
+      margin: 5px;
+    }
     body {
       font-family: var(--vscode-font-family, sans-serif);
       font-size: var(--vscode-font-size, 14px);
@@ -73,16 +84,19 @@ function getWebviewContent(id: string, content: string): string {
     button:hover {
       background-color: var(--vscode-button-hoverBackground);
     }
-
-    #result {
-      margin-top: 1rem;
-      color: var(--vscode-input-foreground);
-    }
   </style>
 </head>
 <body class="vscode-body">
-  <h1>Id: ${id}</h1>
-  <p>${content} (this is where form content can be dynamically loaded from an API)</p>
+  <h1>${node.title}</h1>
+  <hr size=1></hr>
+  <h4>Information</h4>
+  <p>${node.description}</p>
+  <p>Id: ${node.assetId}</p>
+  <hr size=1></hr>
+  <h4>Inputs</h4>
+  <p>${getInputHTML(node)}</p>
+  <hr size=1></hr>
+  <h4>Execute</h4>
   <button id="runCommandButton">Run command in terminal</button>
   <div id="result"></div>
 
@@ -90,8 +104,17 @@ function getWebviewContent(id: string, content: string): string {
     const vscode = acquireVsCodeApi();
 
     document.getElementById("runCommandButton").addEventListener("click", () => {
+      const inputs = document.querySelectorAll("input");
+      const args = {};
+      inputs.forEach((input) => {
+        args[input.name] = input.value;
+      })
+
       document.getElementById("result").textContent = "Running...";
-      vscode.postMessage({ command: "runCommand" });
+
+      vscode.postMessage({ command: "runCommand", args, assetId: ${
+        node.assetId
+      }});
     });
 
     window.addEventListener("message", event => {
@@ -103,8 +126,29 @@ function getWebviewContent(id: string, content: string): string {
   </script>
 </body>
 </html>
+`;
+}
 
-  `;
+function getInputHTML(node: TreeItemNode): string {
+  const fieldsObj = parsePreRequisites(node.fields ?? "");
+  if (!fieldsObj || !fieldsObj.fields) {
+    return "<p>No fields defined.</p>";
+  }
+
+  const inputsHTML = fieldsObj.fields
+    .map(
+      (field) => `
+      <label for="${field.name}" style="display:block; margin-bottom: 8px;">
+        ${field.name}:
+        <input type="${field.type === "string" ? "text" : field.type}" id="${
+        field.name
+      }" name="${field.name}" />
+      </label>
+    `
+    )
+    .join("\n");
+
+  return `<form>${inputsHTML}</form>`;
 }
 
 function runCommandInTerminal(command: string, panel: vscode.WebviewPanel) {
@@ -124,7 +168,9 @@ function runCommandInTerminal(command: string, panel: vscode.WebviewPanel) {
           type: "command-result",
           success: e.exitCode === 0,
           message:
-            e.exitCode === 0 ? "Command ran successfully!" : "Command failed.",
+            e.exitCode === 0
+              ? "Command ran, check terminal for output."
+              : "Command failed.",
         });
         disposable.dispose(); // Clean up
       }
@@ -138,9 +184,4 @@ function runCommandInTerminal(command: string, panel: vscode.WebviewPanel) {
       message: `Error running command: ${error}`,
     });
   }
-}
-
-function getCommandToRun(taskid: string): string {
-  // Replace with your logic to get the command based on task ID
-  return `echo Running task ${taskid}; echo Task completed!`;
 }

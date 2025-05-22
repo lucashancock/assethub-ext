@@ -1,22 +1,26 @@
 import * as vscode from "vscode";
+import { fetchAssetsByUseCase, fetchUseCases } from "./services/assetService";
 
-export type TreeNodeType = "asset" | "task";
+export type TreeNodeType = "usecase" | "asset";
 
 export class TreeItemNode extends vscode.TreeItem {
   constructor(
-    public readonly id: string,
-    public readonly label: string,
+    public readonly assetId: number,
+    public readonly title: string,
+    public readonly description: string,
+    public readonly author: string,
     public readonly nodeType: TreeNodeType,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-    public readonly inputSchema?: string,
+    public readonly preRequisiteAssetIds?: number[],
+    public readonly fields?: string,
     public readonly details?: string,
     public readonly parentId?: string
   ) {
-    super(label, collapsibleState);
-    if (nodeType === "task") {
+    super(title, collapsibleState);
+    if (nodeType === "asset") {
       this.command = {
         command: "treeViewExample.openLeaf",
-        title: "Open Task",
+        title: "Open Asset",
         arguments: [this],
       };
     }
@@ -31,29 +35,40 @@ export class TreeDataProviderImpl
   readonly onDidChangeTreeData: vscode.Event<TreeItemNode | undefined> =
     this._onDidChangeTreeData.event;
 
+  refresh(): void {
+    this._onDidChangeTreeData.fire(undefined);
+  }
+
   async getChildren(element?: TreeItemNode): Promise<TreeItemNode[]> {
     if (!element) {
-      const assets = await fetchAssets();
+      const useCases = await fetchUseCases();
+      return useCases.map((useCase) => {
+        return new TreeItemNode(
+          useCase.id,
+          useCase.title,
+          useCase.description,
+          useCase.author,
+          "usecase",
+          vscode.TreeItemCollapsibleState.Collapsed,
+          useCase.preRequisiteAssetIds
+        );
+      });
+    } else if (element.nodeType === "usecase") {
+      const assets = await fetchAssetsByUseCase(
+        element.preRequisiteAssetIds || []
+      );
       return assets.map(
-        (asset) =>
+        (asset, index) =>
           new TreeItemNode(
             asset.id,
-            asset.name,
+            `${index + 1}. ${asset.title}`, // Add enumeration to the title
+            asset.description,
+            asset.author,
             "asset",
-            vscode.TreeItemCollapsibleState.Collapsed
-          )
-      );
-    } else if (element.nodeType === "asset") {
-      const tasks = await fetchTasks(element.id);
-      return tasks.map(
-        (task) =>
-          new TreeItemNode(
-            task.id,
-            task.name,
-            "task",
             vscode.TreeItemCollapsibleState.None,
-            "Schema here",
-            task.description,
+            [],
+            asset.preRequisites,
+            asset.description,
             element.id
           )
       );
@@ -65,17 +80,6 @@ export class TreeDataProviderImpl
   getTreeItem(element: TreeItemNode): vscode.TreeItem {
     return element;
   }
-}
-
-// Fake API functions:
-
-async function fetchAssets(): Promise<{ id: string; name: string }[]> {
-  await delay(200); // simulate network
-  return [
-    { id: "asset1", name: "Asset One" },
-    { id: "asset2", name: "Asset Two" },
-    { id: "asset3", name: "Asset Three" },
-  ];
 }
 
 async function fetchTasks(
