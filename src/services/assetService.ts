@@ -1,5 +1,6 @@
 // services/assetService.ts
 import { get, post, put, patch, del } from "../utils/api";
+import axios from "axios";
 
 export interface Asset {
   id: number;
@@ -76,7 +77,12 @@ export async function deleteAsset(id: string): Promise<{ success: boolean }> {
 }
 
 export type PreRequisites = {
-  fields: { type: string; name: string }[];
+  fields: {
+    type: string;
+    name: string;
+    optional?: boolean;
+    default?: string;
+  }[];
   installDependencyCommands: string[];
 };
 
@@ -97,19 +103,25 @@ export function parsePreRequisites(input: string): PreRequisites | null {
   }
 }
 
-// Function to get the curl command or later any other command line command to run from the input parameters
-export function getCommandToRun(
-  taskid: number,
+export async function actOnAssets(
   assetId: number,
   args?: Record<string, string>
-): string {
+): Promise<any> {
   const data = {
     assetParams: args,
     selectedAssetIds: [assetId],
   };
-  const curl = `curl 'http://localhost:5007/api/act-on-assets' --data-raw '${JSON.stringify(
-    data
-  )}'`;
-  console.log(curl);
-  return curl;
+
+  try {
+    const response = await axios.post(
+      "http://localhost:5007/api/act-on-assets",
+      data
+    );
+    return response;
+  } catch (error: any) {
+    console.error("API request failed:", error);
+    throw new Error(
+      error.response?.data?.message || error.message || "Unknown error"
+    );
+  }
 }
