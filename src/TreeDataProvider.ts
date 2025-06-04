@@ -7,7 +7,7 @@ export class TreeItemNode extends vscode.TreeItem {
   constructor(
     public readonly assetId: number,
     public readonly title: string,
-    public readonly description: string,
+    public readonly useDescription: string,
     public readonly author: string,
     public readonly nodeType: TreeNodeType,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
@@ -23,6 +23,9 @@ export class TreeItemNode extends vscode.TreeItem {
         title: "Open Asset",
         arguments: [this],
       };
+    }
+    if (collapsibleState === vscode.TreeItemCollapsibleState.None) {
+      this.iconPath = new vscode.ThemeIcon("dash");
     }
   }
 }

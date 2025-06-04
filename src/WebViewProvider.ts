@@ -132,7 +132,19 @@ function getWebviewContent(node: TreeItemNode): string {
       border-color: var(--vscode-focusBorder);
       outline: none;
     }
-
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 4px solid transparent;
+      border-top-color: var(--vscode-editor-foreground);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
     /* Scrollbars */
     ::-webkit-scrollbar {
       width: 8px;
@@ -170,10 +182,10 @@ function getWebviewContent(node: TreeItemNode): string {
       <div class="space-y-2">
         <h4 class="text-xl font-semibold">Information</h4>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          ID: <span class="font-mono">${node.assetId}</span>
+          <span class="font-mono">ID: ${node.assetId}</span>
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400 whitespace-normal break-words">
-          <span class="font-mono">${node.description}</span>
+          <span class="font-mono">${node.useDescription}</span>
         </p>
       </div>
 
@@ -222,7 +234,7 @@ function getWebviewContent(node: TreeItemNode): string {
           >No output yet.</div>
 
         <div id="loadingSpinner" class="hidden mt-1">
-          <div class="w-6 h-6 border-4 border-t-black rounded-full animate-spin"></div>
+          <div class="spinner"></div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 {
-  "name": "assethub",
-  "displayName": "Assethub",
+  "name": "assetbuilder",
+  "displayName": "Asset Builder",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -15,20 +15,34 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "assethub",
-          "title": "Assethub",
-          "icon": "$(circle-large-filled)"
+          "id": "assetbuilder",
+          "title": "Asset Builder",
+          "icon": "$(symbol-constructor)"
         }
       ]
     },
     "views": {
-      "assethub": [
+      "assetbuilder": [
         {
           "id": "treeViewExample",
           "type": "tree",
           "name": "Use Cases",
-          "icon": "${circle-large-filled}",
-          "contextualTitle": "Use Cases for Assethub"
+          "icon": "$(symbol-constructor)",
+          "contextualTitle": "Use Cases for Asset Builder"
+        },
+        {
+          "id": "useCaseCreationView",
+          "type": "webview",
+          "name": "Use Case Builder Menu",
+          "icon": "$(symbol-constructor)",
+          "contextualTitle": "Use Case Builder Menu for Asset Builder"
+        },
+        {
+          "id": "assetCreationView",
+          "type": "webview",
+          "name": "Asset Builder Menu",
+          "icon": "$(symbol-constructor)",
+          "contextualTitle": "Asst Builder Menu for Asset Builder"
         }
       ]
     },
