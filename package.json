@@ -29,20 +29,6 @@
           "name": "Use Cases",
           "icon": "$(symbol-constructor)",
           "contextualTitle": "Use Cases for Asset Builder"
-        },
-        {
-          "id": "useCaseCreationView",
-          "type": "webview",
-          "name": "Use Case Builder Menu",
-          "icon": "$(symbol-constructor)",
-          "contextualTitle": "Use Case Builder Menu for Asset Builder"
-        },
-        {
-          "id": "assetCreationView",
-          "type": "webview",
-          "name": "Asset Builder Menu",
-          "icon": "$(symbol-constructor)",
-          "contextualTitle": "Asst Builder Menu for Asset Builder"
         }
       ]
     },
